@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math # for math.log and what not!
 import os
 from pathlib import Path
 
@@ -23,7 +24,7 @@ MCP_PATH = os.getenv("HELLO_MCP_PATH", "/mcp")
 
 mcp = FastMCP(
     name="HelloMCP",
-    instructions="A tiny local MCP calculator server. Use calculator.add to add two numbers.",
+    instructions="A tiny local MCP calculator server with some calculator tools.",
     host=HOST,
     port=PORT,
     streamable_http_path=MCP_PATH,
@@ -39,6 +40,20 @@ mcp = FastMCP(
 def add(a: float, b: float) -> float:
     return a + b
 
+@mcp.tool(
+    name="calculator.subtract",
+    description="Subtract second number from first number and return the difference.",
+)
+def subtract(a: float, b: float) -> float:
+    return a - b
+
+
+@mcp.tool(
+    name="calculator.log",
+    description="Calculate the natural logarithm of a number.",
+)
+def log(a: float) -> float:
+    return math.log(a)
 
 @mcp.custom_route("/healthz", methods=["GET"], include_in_schema=False)
 async def healthz(_: Request) -> JSONResponse:

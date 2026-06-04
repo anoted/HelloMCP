@@ -1,4 +1,4 @@
-# HelloMCP File Overview
+# HelloMCP Overview
 
 This project contains a small local Model Context Protocol (MCP) calculator server and OpenAI-compatible chat clients that can call the MCP tool.
 

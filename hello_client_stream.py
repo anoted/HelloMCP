@@ -70,18 +70,22 @@ def stream_openai(messages, tools):
     answer, tool_calls, current = [], {}, [None]
     with urllib.request.urlopen(request) as response:
         print("\n=========================")
+        
         for raw in response:
             line = raw.decode("utf-8").strip()
             if not line.startswith("data:"):
                 continue
+
             data = line[5:].strip()
             if data == "[DONE]":
                 break
             delta = (json.loads(data).get("choices") or [{}])[0].get("delta") or {}
             write("reasoning", delta.get("reasoning_content") or delta.get("reasoning"), current)
+
             if content := delta.get("content"):
                 answer.append(content)
                 write("\nanswer", content, current)
+
             for chunk in delta.get("tool_calls") or []:
                 call = tool_calls.setdefault(int(chunk.get("index", len(tool_calls))), {"id": "", "type": "function", "function": {"name": "", "arguments": ""}})
                 call["id"] = chunk.get("id") or call["id"]
@@ -89,6 +93,7 @@ def stream_openai(messages, tools):
                 function = chunk.get("function") or {}
                 call["function"]["name"] += function.get("name") or ""
                 call["function"]["arguments"] += function.get("arguments") or ""
+
     if current[0]:
         print("\n=========================")
     message = {"role": "assistant", "content": "".join(answer).strip() or None}
@@ -109,10 +114,14 @@ async def chat():
             await session.initialize()
             tools, names = openai_tools((await session.list_tools()).tools)
             messages = [{"role": "system", "content": "You are a helpful assistant. When arithmetic is requested, call the available MCP calculator tool instead of doing it mentally."}]
+            
             print(f"Model: {OPENAI_MODEL}")
             print(f"OpenAI-compatible endpoint: {OPENAI_BASE_URL}")
             print(f"MCP endpoint: {MCP_URL}")
+            print(f"Available MCP tools: {', '.join(names.values())}")
             print("Type 'exit' to quit.\n")
+
+
             while True:
                 text = input("you>> ").strip()
                 if text.lower() in {"exit", "quit"}:
@@ -120,6 +129,7 @@ async def chat():
                 if not text:
                     continue
                 messages.append({"role": "user", "content": text})
+
                 while True:
                     messages.append(stream_openai(messages, tools))
                     calls = messages[-1].get("tool_calls") or []
