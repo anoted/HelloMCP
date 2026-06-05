@@ -292,27 +292,24 @@ Start `hello_mcp_server.py` before using OpenCode with the MCP server.
 
 Create or edit:
 
+In Linux or Mac: 
+
 ```text
 ~/.config/opencode/opencode.json
 ```
 
-Add or merge this MCP entry:
+For Windows:
+The following will be under your user profile. 
+Typically in C:\Users\<USERNAME>\.config\opencode\
 
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "HelloMCP": {
-      "type": "remote",
-      "url": "http://127.0.0.1:8765/mcp",
-      "enabled": true
-    }
-  }
-}
+Its a .json file, not any other - please pay attention to the extention. 
+
+```text
+/.config/opencode/opencode.json
 ```
+You can add the local Qwen provider, and MCP settings into one JSON file:
 
-If OpenCode also needs the local Qwen provider, merge the provider and MCP settings into one JSON file:
-
+Write in opencode.json: 
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
