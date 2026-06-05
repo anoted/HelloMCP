@@ -21,7 +21,6 @@ if load_dotenv is not None:
     load_dotenv(Path(__file__).with_name(".env"))
 
 
-OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "http://127.0.0.1:1234/v1").rstrip("/")
 OPENAI_HOST = os.getenv("OPENAI_HOST") or os.getenv("OPENAI_IP")
 OPENAI_PORT = os.getenv("OPENAI_PORT")
 if OPENAI_HOST and OPENAI_PORT:

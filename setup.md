@@ -211,13 +211,13 @@ macOS/Linux:
 
 ```bash
 conda activate mcpagents
-python HelloMCP/hello_client.py
+python hello_client.py
 ```
 
 Streaming client:
 
 ```bash
-python HelloMCP/hello_client_stream.py
+python hello_client_stream.py
 ```
 
 Try prompts such as:
@@ -288,7 +288,7 @@ opencode --version
 
 ## 8. Optional OpenCode Configuration
 
-Start `HelloMCP/hello_mcp_server.py` before using OpenCode with the MCP server.
+Start `hello_mcp_server.py` before using OpenCode with the MCP server.
 
 Create or edit:
 
