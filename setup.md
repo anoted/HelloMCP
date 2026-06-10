@@ -10,21 +10,20 @@
 
 * Install the Python packages needed by the Module 1 examples.
 
-  * `mcp[cli]` for the HelloMCP server and MCP clients.
+  * `mcp[cli]` for the HelloMCP server and MCP client.
   * `python-dotenv` for `.env` files.
-  * `openai` for the model-only connection check in `base_openai.py`.
   * Optional: `ipykernel` for Jupyter notebooks.
 
 * Configure the OpenAI-compatible model endpoint.
 
   * Model: `Qwen/Qwen3.6-35B-A3B`
   * Endpoint format: `http://<MODEL_SERVER_IP>:<PORT>/v1`
-  * HelloMCP clients use `OPENAI_MODEL`.
-  * `base_openai.py` uses `MODEL_NAME`.
+  * The client uses `LLM_BASE_URL`, `LLM_API_KEY`, and `LLM_MODEL`.
 
 * Configure and run HelloMCP.
 
-  * Current server file: `HelloMCP/hello_mcp_server.py`
+  * Sample MCP server file: `HelloMCP/hello_mcp_server.py`
+  * MCP-capable client file: `HelloMCP/hello_client_remote_stream.py`
   * Default MCP endpoint: `http://127.0.0.1:8765/mcp`
   * Default health check: `http://127.0.0.1:8765/healthz`
   * Current MCP tools: `calculator.add`, `calculator.subtract`, `calculator.log`
@@ -71,18 +70,13 @@ python -m pip --version
 
 ```bash
 python -m pip install --upgrade pip
-python -m pip install "mcp[cli]>=1.23.0,<2.0.0" python-dotenv openai ipykernel
+python -m pip install "mcp[cli]>=1.23.0,<2.0.0" python-dotenv
 ```
 
-If you do not plan to use Jupyter, `ipykernel` may be omitted:
+Optional Jupyter support:
 
 ```bash
-python -m pip install "mcp[cli]>=1.23.0,<2.0.0" python-dotenv openai
-```
-
-Optional Jupyter kernel registration:
-
-```bash
+python -m pip install ipykernel
 python -m ipykernel install --user --name mcp-agents --display-name "Python (mcp-agents)"
 ```
 
@@ -96,52 +90,74 @@ Create this file:
 HelloMCP/.env
 ```
 
-Add the model and MCP settings:
+Add the model, MCP client, and HelloMCP server settings:
 
 ```env
-OPENAI_HOST=<MODEL_SERVER_IP>
-OPENAI_PORT=<PORT>
-OPENAI_BASE_URL=http://<MODEL_SERVER_IP>:<PORT>/v1
-OPENAI_API_KEY=local-not-needed
-OPENAI_MODEL=Qwen/Qwen3.6-35B-A3B
-MODEL_NAME=Qwen/Qwen3.6-35B-A3B
+LLM_BASE_URL=http://<MODEL_SERVER_IP>:<PORT>/v1
+LLM_API_KEY=local-not-needed
+LLM_MODEL=Qwen/Qwen3.6-35B-A3B
+LLM_TEMPERATURE=0.8
+LLM_STREAM=true
+
+MCP_ENABLED=true
+MCP_SERVERS=calculator=http://127.0.0.1:8765/mcp
+MCP_SHOW_ERRORS=false
+MCP_CONNECT_TIMEOUT=1.5
 
 HELLO_MCP_HOST=127.0.0.1
 HELLO_MCP_PORT=8765
 HELLO_MCP_PATH=/mcp
-HELLO_MCP_URL=http://127.0.0.1:8765/mcp
 ```
 
 Example only:
 
 ```env
-OPENAI_HOST=192.168.1.50
-OPENAI_PORT=8000
-OPENAI_BASE_URL=http://192.168.1.50:8000/v1
-OPENAI_API_KEY=local-not-needed
-OPENAI_MODEL=Qwen/Qwen3.6-35B-A3B
-MODEL_NAME=Qwen/Qwen3.6-35B-A3B
+LLM_BASE_URL=http://192.168.1.50:8000/v1
+LLM_API_KEY=local-not-needed
+LLM_MODEL=Qwen/Qwen3.6-35B-A3B
+LLM_TEMPERATURE=0.8
+LLM_STREAM=true
+
+MCP_ENABLED=true
+MCP_SERVERS=calculator=http://127.0.0.1:8765/mcp
+MCP_SHOW_ERRORS=false
+MCP_CONNECT_TIMEOUT=1.5
 
 HELLO_MCP_HOST=127.0.0.1
 HELLO_MCP_PORT=8765
 HELLO_MCP_PATH=/mcp
-HELLO_MCP_URL=http://127.0.0.1:8765/mcp
 ```
 
-Use a bare host name or IP address for `OPENAI_HOST`; do not include `http://` or `/v1` there.
+Use the full OpenAI-compatible endpoint URL for `LLM_BASE_URL`. It should include `http://` and `/v1`.
+
+The HelloMCP server uses these settings:
+
+```env
+HELLO_MCP_HOST=127.0.0.1
+HELLO_MCP_PORT=8765
+HELLO_MCP_PATH=/mcp
+```
+
+The client uses `MCP_SERVERS` to find one or more MCP servers:
+
+```env
+MCP_SERVERS=calculator=http://127.0.0.1:8765/mcp
+```
 
 If you need to match older demo notes that use `http://localhost:8000/mcp`, set:
 
 ```env
 HELLO_MCP_PORT=8000
-HELLO_MCP_URL=http://127.0.0.1:8000/mcp
+MCP_SERVERS=calculator=http://127.0.0.1:8000/mcp
 ```
+
+Do not submit your real `.env` file.
 
 ---
 
 ## 4. Start the HelloMCP Server
 
-Open terminal 1, activate the environment, and start the server:
+Open terminal 1, activate the environment, and start the server.
 
 PowerShell:
 
@@ -190,7 +206,7 @@ Expected response:
 
 ---
 
-## 5. Run the HelloMCP Chat Client
+## 5. Run the HelloMCP Remote Streaming Client
 
 Open terminal 2 and activate the same Python environment.
 
@@ -198,26 +214,36 @@ PowerShell:
 
 ```powershell
 conda activate mcpagents
-python HelloMCP\hello_client.py
-```
-
-Streaming client:
-
-```powershell
-python HelloMCP\hello_client_stream.py
+python HelloMCP\hello_client_remote_stream.py
 ```
 
 macOS/Linux:
 
 ```bash
 conda activate mcpagents
-python hello_client.py
+python HelloMCP/hello_client_remote_stream.py
 ```
 
-Streaming client:
+The client should print startup information similar to this:
 
-```bash
-python hello_client_stream.py
+```text
+Model: Qwen/Qwen3.6-35B-A3B
+LLM endpoint: http://<MODEL_SERVER_IP>:<PORT>/v1
+Streaming: True
+MCP: 1 on, 0 unavailable
+MCP servers on:
+  - calculator: http://127.0.0.1:8765/mcp
+    tools: calculator.add, calculator.subtract, calculator.log
+Type 'exit' or 'quit' to stop.
+```
+
+If an MCP server is not running, the client should still start and report it cleanly:
+
+```text
+MCP: 0 on, 1 unavailable
+MCP servers unavailable:
+  - calculator
+Type 'exit' or 'quit' to stop.
 ```
 
 Try prompts such as:
@@ -231,34 +257,34 @@ Use the calculator tool to compute the natural log of 10.
 The practical checkpoint is complete when:
 
 * The HelloMCP health endpoint returns `status: ok`.
-* The client prints the model endpoint and MCP endpoint.
+* The client prints the model endpoint and MCP server status.
 * The model calls one of the MCP calculator tools and returns a final answer.
 
 ---
 
-## 6. Optional Model-Only Connection Check
+## 6. Streamed vs Non-Streamed Responses
 
-`base_openai.py` reads `.env` from the project root, not from `HelloMCP/.env`.
-
-Create this file if you want to run the model-only check:
-
-```text
-.env
-```
-
-Add:
+The remote streaming client is controlled by:
 
 ```env
-OPENAI_BASE_URL=http://<MODEL_SERVER_IP>:<PORT>/v1
-OPENAI_API_KEY=local-not-needed
-MODEL_NAME=Qwen/Qwen3.6-35B-A3B
+LLM_STREAM=true
 ```
 
-Run:
+When `LLM_STREAM=true`, the response appears gradually as the model generates it.
+
+To compare with non-streamed behavior, change:
+
+```env
+LLM_STREAM=false
+```
+
+Then run the same client again:
 
 ```bash
-python base_openai.py
+python HelloMCP/hello_client_remote_stream.py
 ```
+
+When `LLM_STREAM=false`, the client waits until the full model response is available before printing the assistant response.
 
 ---
 
@@ -290,26 +316,24 @@ opencode --version
 
 Start `hello_mcp_server.py` before using OpenCode with the MCP server.
 
-Create or edit:
+Create or edit the OpenCode configuration file.
 
-In Linux or Mac: 
+Linux or macOS:
 
 ```text
 ~/.config/opencode/opencode.json
 ```
 
-For Windows:
-The following will be under your user profile. 
-Typically in C:\Users\<USERNAME>\.config\opencode\
-
-Its a .json file, not any other - please pay attention to the extention. 
+Windows:
 
 ```text
-/.config/opencode/opencode.json
+C:\Users\<USERNAME>\.config\opencode\opencode.json
 ```
-You can add the local Qwen provider, and MCP settings into one JSON file:
 
-Write in opencode.json: 
+This should be a `.json` file. Check the extension carefully.
+
+You can add the local Qwen provider and MCP settings into one JSON file:
+
 ```json
 {
   "$schema": "https://opencode.ai/config.json",
@@ -355,5 +379,7 @@ Inside OpenCode, ask:
 Use HelloMCP to calculate 12 + 30.
 ```
 
-[1]: https://opencode.ai/docs/config/ "OpenCode Config"
-[2]: https://opencode.ai/docs/cli/ "OpenCode CLI"
+References:
+
+* https://opencode.ai/docs/config/
+* https://opencode.ai/docs/cli/

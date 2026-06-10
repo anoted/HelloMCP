@@ -43,7 +43,6 @@ LLM_STREAM = os.getenv("LLM_STREAM", "true").lower() not in {
 # MCP SETTINGS
 # ============================================================
 #
-# MCP is optional.
 #
 # Multiple MCP servers:
 #
