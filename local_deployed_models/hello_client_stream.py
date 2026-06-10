@@ -65,7 +65,7 @@ def stream_openai(messages, tools):
     Stream a response from the OpenAI API for the given messages and tools, 
     yielding reasoning, answer, and tool call chunks as they arrive.
     """
-    body = {"model": OPENAI_MODEL, "messages": messages, "tools": tools, "tool_choice": "auto", "temperature": 0.2, "stream": True}
+    body = {"model": OPENAI_MODEL, "messages": messages, "tools": tools, "tool_choice": "auto", "temperature": 0.8, "stream": True}
     request = urllib.request.Request(f"{OPENAI_BASE_URL}/chat/completions", json.dumps(body).encode(), {"Content-Type": "application/json", "Authorization": f"Bearer {OPENAI_API_KEY}"}, method="POST")
     answer, tool_calls, current = [], {}, [None]
     with urllib.request.urlopen(request) as response:
