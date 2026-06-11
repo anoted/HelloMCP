@@ -7,8 +7,7 @@ In this assignment, you will set up your course programming environment, connect
 The primary workflow is the Python `HelloMCP` example:
 
 * `HelloMCP/hello_mcp_server.py`
-* `HelloMCP/hello_client.py`
-* `HelloMCP/hello_client_stream.py`
+* `HelloMCP/hello_mcp_remote_stream.py`
 
 Students who prefer TypeScript may use the TypeScript alternative described in `typescript_alternative.md`.
 
